@@ -4,8 +4,11 @@ import random
 import io #input and output tools
 import json # a big dictionary
 import urllib.request
+from tkinter import messagebox
+import time #wait on anything time related
+import os #operating system
 
-random.seed(57)
+#random.seed(57)
 
 
 
@@ -31,7 +34,12 @@ def get_pokemon(id_or_name):
     #Get name
     name = data["name"].title()#access a value from a dictionary with a key
     
-    
+    hp = 0
+    for stat in data['stats']:
+        #print(stat)
+        if stat['stat']['name'] == 'hp':
+            hp = stat['base_stat']
+        
     #image sprite
     img_url = data['sprites']['front_default']
     image_data = urllib.request.urlopen(img_url).read() #download image
@@ -51,7 +59,7 @@ def get_pokemon(id_or_name):
         moveNames = moveNames[:4] #slices it to length 4
     else:
         pass
-    print(moveNames)
+    #print(moveNames)
 
 
     # print(name)
@@ -59,7 +67,8 @@ def get_pokemon(id_or_name):
     return{
         "name":name, 
         'image': ImageTk.PhotoImage(image), #convert to Tkinder image format
-        'moves': moveNames
+        'moves': moveNames,
+        'hp': hp
     }
 
 p1_num = random.randint(1,1025)
@@ -77,6 +86,11 @@ image_label1 = tk.Label(p1_frame, bg="green")
 image_label1.config(image=p1['image'])
 image_label1.pack(padx=20)#padx = space on left and right
 
+hpLabel = tk.Label(p1_frame, text=f"Hp: {p1['hp']}", fg= "white", bg="grey", font=("Arial", 16))
+hpLabel.place (x=90, y= 50)
+
+
+
 #p2
 p2_num = random.randint(1,1025)
 if p1_num == p2_num:
@@ -87,6 +101,7 @@ p2_frame = tk.Frame(screen,bg="green")
 p2_frame.pack(side="right", padx=50)
 
 
+
 p2_info = tk.StringVar() #changes variable into string
 p2_info.set(f"{p2['name']}")
 tk.Label(p2_frame, textvariable=p2_info, bg="green", font=("Arial", 14)).pack(pady=(10))#top and bottom
@@ -95,7 +110,11 @@ image_label2 = tk.Label(p2_frame, bg="green")
 image_label2.config(image=p2['image'])
 image_label2.pack(padx=20)
 
+hpLabel2 = tk.Label(p2_frame, text=f"Hp: {p2['hp']}", fg= "white", bg="grey", font=("Arial", 16))
+hpLabel2.place(x=90, y=50)
+
 def Showmove(p1):
+    global moveButton1
     #p1 moves
     moveButton1 = []
     MoveLen1 = len(p1['moves'])
@@ -105,17 +124,54 @@ def Showmove(p1):
         moveButton1.append(BTN)
 
 
+def Showmoves2(p2):
+    #p1 moves
+    global moveButton2
+    moveButton2 = []
+    MoveLen2 = len(p2['moves'])
+    for i in range(MoveLen2):
+        BTN = tk.Button(p2_frame, text=p2['moves'][i], width= 10, height= 2, fg="black", bg="grey", font=("Arial",15))
+        BTN.pack(pady=4)
+        moveButton2.append(BTN)
+
+def CompAttack(attacker, defender):
+    CurrMove = random.choice(attacker['moves'])
+    damage = random.randint(0,40)
+
+    message = (f"{attacker['name']} used {CurrMove} on {defender['name']} for {damage} damage")
+    messagebox.showinfo("Attack", message)
+
+# CompAttack(p2,p1)
+def TurnBased(p1, p2):
+    turn = 1
+    if turn == 1:
+        for button in moveButton1:
+            button.config(state=tk.ACTIVE)
+        for button in moveButton2:
+            button.config(state=tk.DISABLED)
+        #CompAttack(p1,p2) 
+        turn = 2
+        #time.sleep()
+    elif turn == 2:
+        for button in moveButton1:
+            button.config(state=tk.DISABLED)
+        CompAttack(p2,p1)
+        turn = 1
+
+
 #Labels
 TitleLabel = tk.Label(screen, text="Pokemon Battle by David", font=("Arial", 30), fg="White", bg="green")
 #grid, place, pack
-TitleLabel.place(x = 100, y = 50)
+TitleLabel.place(x = 120, y = 30)
 
 #vs label
 VsLabel = tk.Label(screen, text= "VS", font=("Arial",20), fg="ORANGE", bg="Green", anchor="w")
 VsLabel.place(relx= 0.45, rely=0.5)
 
 Showmove(p1)#Displays both users moves
+Showmoves2(p2)
 
+#while True:
+TurnBased(p1,p2)
 #keep at bottom 
 screen.mainloop()#refreshes screen infinite
-
