@@ -10,7 +10,7 @@ import os #operating system
 
 #random.seed(57)
 
-
+turn = 1
 
 #Tkinter
 screen = tk.Tk()#tk.Tk is screen
@@ -20,6 +20,7 @@ screen.configure(bg="green")#bg is background
 
 #Making requests to fetch pokemon data from API
 def get_pokemon(id_or_name):
+    global data
     url = f"https://pokeapi.co/api/v2/pokemon/{id_or_name}"
     #try except - similar to if then statement, if cant run try run except so code continues running
     try:
@@ -119,7 +120,8 @@ def Showmove(p1):
     moveButton1 = []
     MoveLen1 = len(p1['moves'])
     for i in range(MoveLen1):
-        BTN = tk.Button(p1_frame, text=p1['moves'][i], width= 10, height= 2, fg="black", bg="grey", font=("Arial",15))
+        BTN = tk.Button(p1_frame, text=p1['moves'][i], width= 10, height= 2, fg="black", bg="grey", font=("Arial",15), 
+                        command = lambda i=i: p1Attack(i))
         BTN.pack(pady=4)
         moveButton1.append(BTN)
 
@@ -134,17 +136,37 @@ def Showmoves2(p2):
         BTN.pack(pady=4)
         moveButton2.append(BTN)
 
+def p1Attack(pbutton):
+    global p2
+    damage = random.randint(1,45)
+    ButtonPressed = p1['moves'][pbutton]#get name of button pressed
+    print(ButtonPressed)
+    messagebox.showinfo("Player Attack",f"The Player hit {p2['name']} with {ButtonPressed} for {damage} damage")
+    p2['hp'] -= damage
+    TurnBased(p1,p2)
+
+
+
 def CompAttack(attacker, defender):
+    global p1
     CurrMove = random.choice(attacker['moves'])
     damage = random.randint(0,40)
 
     message = (f"{attacker['name']} used {CurrMove} on {defender['name']} for {damage} damage")
     messagebox.showinfo("Attack", message)
+    p1['hp'] -= damage
+    
 
 # CompAttack(p2,p1)
 def TurnBased(p1, p2):
-    turn = 1
+    global turn
+    global moveButton2
+    if p1['hp'] <= 0:
+        screen.quit()#closes window
+    elif p2['hp'] <= 0:
+        screen.quit()
     if turn == 1:
+        print("Turn 1")
         for button in moveButton1:
             button.config(state=tk.ACTIVE)
         for button in moveButton2:
@@ -153,10 +175,14 @@ def TurnBased(p1, p2):
         turn = 2
         #time.sleep()
     elif turn == 2:
+        print("Turn 2")
         for button in moveButton1:
             button.config(state=tk.DISABLED)
         CompAttack(p2,p1)
         turn = 1
+        TurnBased(p1,p2)
+    hpLabel.config(text=f"Hp: {p1['hp']}")
+    hpLabel2.config(text=f"Hp: {p2['hp']}")
 
 
 #Labels
